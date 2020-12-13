@@ -1,6 +1,6 @@
 # EDMC Cargo Manifest
 
-A small plugin for [EDMC](https://github.com/EDCD/EDMarketConnector) that displays current cargo carried by type and quantity along with total cargo capacity.
+A small plugin for [EDMC](https://github.com/EDCD/EDMarketConnector) that displays current cargo carried by type and quantity along with total cargo capacity.  Only compatible with Python 3.
 
 ## Installation
 
