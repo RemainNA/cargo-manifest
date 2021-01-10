@@ -1,5 +1,8 @@
 import sys
 import tkinter as tk
+import requests
+from ttkHyperlinkLabel import HyperlinkLabel
+import myNotebook as nb
 from config import config
 import json
 from os import path
@@ -7,53 +10,72 @@ from os import path
 this = sys.modules[__name__]  # For holding module globals
 
 this.cargoDict = {}
-this.namesDict = {}
-this.firstCargoRead = True
+this.eddbData = {}
+this.inventory = []
 this.cargoCapacity = "?"
+this.version = 'v2.0.0'
+
+def checkVersion():
+	req = requests.get(url='https://api.github.com/repos/RemainNA/cargo-manifest/releases/latest')
+	if not req.status_code == requests.codes.ok:
+		return -1 # Error
+	data = req.json()
+	if data['tag_name'] == this.version:
+		return 1 # Newest
+	return 0 # Newer version available
 
 def plugin_start3(plugin_dir):
 	# Read in item names on startup
-	pluginPath = path.join(config.plugin_dir, "CargoManifest")
+	directoryName = path.basename(path.dirname(__file__)) or 'CargoManifest'
+	pluginPath = path.join(config.plugin_dir, directoryName)
 	filePath = path.join(pluginPath, "items.json")
-	itemsFile = open(filePath, 'r')
-	jsonData = itemsFile.read()
-	this.namesDict = json.loads(jsonData)
-	return "CargoManifest"
-
-def plugin_stop():
-	# Writes all recorded names to the items file
-	itemsJSON = json.dumps(this.namesDict, indent=4, sort_keys=True)
-	pluginPath = path.join(config.plugin_dir, "CargoManifest")
-	filePath = path.join(pluginPath, "items.json")
-	itemsFile = open(filePath, 'w')
-	itemsFile.write(itemsJSON)
+	this.items = json.loads(open(filePath, 'r').read())
+	if config.getint("cm_showPrices"):
+		refreshPrices(False)
+	this.newest = checkVersion()
+	return "Cargo Manifest"
 
 def plugin_app(parent):
 	# Adds to the main page UI
 	this.frame = tk.Frame(parent)
 	this.title = tk.Label(this.frame, text="Cargo Manifest")
-	this.title.grid()
+	this.updateIndicator = HyperlinkLabel(this.frame, text="Update availabe", anchor=tk.W, url='https://github.com/RemainNA/cargo-manifest/releases')
+	this.manifest = tk.Label(this.frame)
+	this.title.grid(row = 0, column = 0)
+	if this.newest == 0:
+		this.updateIndicator.grid(padx = 5, row = 0, column = 1)
 	return this.frame
 
+def plugin_prefs(parent, cmdr, is_beta):
+	# Adds page to settings menu
+	frame = nb.Frame(parent)
+	this.showPrices = tk.IntVar(value=config.getint("cm_showPrices") and 1)
+	HyperlinkLabel(frame, text="Cargo Manifest {}".format(this.version), background=nb.Label().cget('background'), url="https://github.com/RemainNA/cargo-manifest").grid()
+	nb.Checkbutton(frame, text="Show commodity prices from EDDB", variable=this.showPrices).grid()
+	nb.Button(frame, text="Refresh prices", command=refreshPrices).grid()
+	return frame
+
+def prefs_changed(cmdr, is_beta):
+	# Saves settings
+	config.set("cm_showPrices", this.showPrices.get())
+	if config.getint("cm_showPrices"):
+		refreshPrices(False)
+	update_display()
+
+def refreshPrices(refreshDisplay = True):
+	# Pulls prices from EDDB
+	this.eddbData = requests.get(url='https://eddb.io/archive/v6/commodities.json').json()
+	if refreshDisplay:
+		update_display()
+
 def journal_entry(cmdr, is_beta, system, station, entry, state):
-	# Parse journal entries
-	if entry['event'] == 'MarketBuy' or entry['event'] == 'MarketSell' or entry['event'] == 'CollectCargo' or entry['event'] == 'EjectCargo':
-		# Events tend to contain localised names, helpful for building a dict
-		try:
-			this.namesDict[entry['Type']] = entry['Type_Localised']
-		except:
-			this.namesDict[entry['Type']] = entry['Type']
-			#This may occur when collecting or ejecting non-commodity items
-	
-	elif entry['event'] == 'Cargo':
+	# Parse journal entries	
+	if entry['event'] == 'Cargo':
 		# Emitted whenever cargo hold updates
-		if this.firstCargoRead:
-			# Emitted on game start, contains full list of localised names
-			for i in entry['Inventory']:
-				this.namesDict[i['Name']] = i['Name_Localised']
-			this.firstCargoRead = False
 		if state['Cargo'] != this.cargoDict:
 			this.cargoDict = state['Cargo']
+		if 'Inventory' in entry and entry['Inventory'] != this.inventory:
+			this.inventory = entry['Inventory']
 		update_display()
 	
 	elif entry['event'] == 'Loadout' and this.cargoCapacity != entry['CargoCapacity']:
@@ -61,13 +83,13 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 		this.cargoCapacity = entry['CargoCapacity']
 		update_display()
 	
-	elif entry['event'] == 'ShutDown':
-		# Resets tracking first login when the game shuts down while EDMC is running
-		this.firstCargoRead = True
-	
 	elif entry['event'] == 'StartUp':
 		# Tries to update display from EDMC stored data when started after the game
 		this.cargoDict = state['Cargo']
+		try:
+			this.inventory = state['CargoJSON']['Inventory'] # Only supported in 4.1.6 on
+		except:
+			pass
 		cargoCap = 0
 		for i in state['Modules']:
 			if state['Modules'][i]['Item'] == 'int_cargorack_size1_class1':
@@ -88,18 +110,46 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 				cargoCap += 256
 
 		this.cargoCapacity = cargoCap
-		this.firstCargoRead = False
 		update_display()
 
 def update_display():
 	# When cargo or loadout change update main UI
-	currentCargo = 0
 	manifest = ""
-	for i in this.cargoDict:
-		try:
-			manifest = manifest+"\n{quant} {name}".format(name=this.namesDict[i], quant=this.cargoDict[i])
-		except:
-			manifest = manifest+"\n{quant} {name}".format(name=i, quant=this.cargoDict[i])
-		currentCargo += int(this.cargoDict[i])
-	this.title["text"] = "Cargo Manifest ({curr}/{cap})".format(curr = currentCargo, cap = this.cargoCapacity)+manifest
+	currentCargo = 0
+	for i in this.inventory:
+		line = ""
+		if i['Name'] in this.items:
+			line = "{quant} {name}".format(quant = i['Count'], name=this.items[i['Name']]['name'])
+		else:
+			line = "{quant} {name}".format(quant = i['Count'], name=(i['Name_Localised'] if 'Name_Localised' in i else i['Name']))
+		if 'Stolen' in i and i['Stolen'] > 0:
+			line = line+", {} stolen".format(i['Stolen'])
+		if 'MissionID' in i:
+			line = line+" (Mission)"
+		if config.getint("cm_showPrices"):
+			for j in this.eddbData:
+				if int(j['ed_id']) == int(this.items[i['Name']]['id']):
+					line = line+" ({:,} cr avg)".format(j['average_price'])
+					break
+		manifest = manifest+"\n"+line
+		currentCargo += int(i['Count'])
+
+	if this.inventory == []:
+		for i in this.cargoDict:
+			manifest = manifest+"\n{quant} {name}".format(name=this.items[i]['name'], quant=this.cargoDict[i])
+			if config.getint("cm_showPrices"):
+				for j in this.eddbData:
+					if j['name'] == this.items[i]['name']:
+						manifest = manifest+" ({:,} cr avg)".format(j['average_price'])
+						break
+			currentCargo += int(this.cargoDict[i])
+	
+	this.title["text"] = "Cargo Manifest ({curr}/{cap})".format(curr = currentCargo, cap = this.cargoCapacity)
+	this.manifest["text"] = manifest.strip() # Remove leading newline
 	this.title.grid()
+	if this.newest == 0:
+		this.manifest.grid(columnspan=2)
+	else:
+		this.manifest.grid()
+	if manifest.strip() == "":
+		this.manifest.grid_remove()
