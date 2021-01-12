@@ -1499,11 +1499,6 @@
         "id": "128682048",
         "name": "Survival Equipment"
     },
-    "symbol": {
-        "category": "category",
-        "id": "id",
-        "name": "name"
-    },
     "syntheticfabrics": {
         "category": "Textiles",
         "id": "128049193",
