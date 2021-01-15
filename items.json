@@ -82,7 +82,7 @@
     "ancientcasket": {
         "category": "Salvage",
         "id": "128732185",
-        "name": "Ancient Casket"
+        "name": "Guardian Casket"
     },
     "ancientkey": {
         "category": "Salvage",
@@ -92,27 +92,27 @@
     "ancientorb": {
         "category": "Salvage",
         "id": "128732184",
-        "name": "Ancient Orb"
+        "name": "Guardian Orb"
     },
     "ancientrelic": {
         "category": "Salvage",
         "id": "128732183",
-        "name": "Ancient Relic"
+        "name": "Guardian Relic"
     },
     "ancienttablet": {
         "category": "Salvage",
         "id": "128732186",
-        "name": "Ancient Tablet"
+        "name": "Guardian Tablet"
     },
     "ancienttotem": {
         "category": "Salvage",
         "id": "128732188",
-        "name": "Ancient Totem"
+        "name": "Guardian Totem"
     },
     "ancienturn": {
         "category": "Salvage",
         "id": "128732187",
-        "name": "Ancient Urn"
+        "name": "Guardian Urn"
     },
     "anduligafireworks": {
         "category": "Consumer Items",
@@ -153,6 +153,11 @@
         "category": "Foods",
         "id": "128667041",
         "name": "Any Na Coffee"
+    },
+    "apavietii": {
+        "category": "Legal Drugs",
+        "id": "128958679",
+        "name": "Apa Vietii"
     },
     "aquaponicsystems": {
         "category": "Technology",
@@ -929,6 +934,36 @@
         "id": "128667028",
         "name": "Lyrae Weed"
     },
+    "m3_tissuesample_membrane": {
+        "category": "Salvage",
+        "id": "128922782",
+        "name": "Mollusc Membrane"
+    },
+    "m3_tissuesample_mycelium": {
+        "category": "Salvage",
+        "id": "128922783",
+        "name": "Mollusc Mycelium"
+    },
+    "m3_tissuesample_spores": {
+        "category": "Salvage",
+        "id": "128922784",
+        "name": "Mollusc Spores"
+    },
+    "m_tissuesample_fluid": {
+        "category": "Salvage",
+        "id": "128922517",
+        "name": "Mollusc Fluid"
+    },
+    "m_tissuesample_nerves": {
+        "category": "Salvage",
+        "id": "128922519",
+        "name": "Mollusc Brain Tissue"
+    },
+    "m_tissuesample_soft": {
+        "category": "Salvage",
+        "id": "128922518",
+        "name": "Mollusc Soft Tissue"
+    },
     "magneticemittercoil": {
         "category": "Machinery",
         "id": "128673869",
@@ -1154,6 +1189,11 @@
         "id": "128671118",
         "name": "Osmium"
     },
+    "p_particulatesample": {
+        "category": "Salvage",
+        "id": "128922523",
+        "name": "Anomaly Particles"
+    },
     "painite": {
         "category": "Minerals",
         "id": "128668550",
@@ -1319,6 +1359,41 @@
         "id": "128049163",
         "name": "Rutile"
     },
+    "s6_tissuesample_cells": {
+        "category": "Salvage",
+        "id": "128922786",
+        "name": "Pod Outer Tissue"
+    },
+    "s6_tissuesample_coenosarc": {
+        "category": "Salvage",
+        "id": "128922787",
+        "name": "Pod Shell Tissue"
+    },
+    "s6_tissuesample_mesoglea": {
+        "category": "Salvage",
+        "id": "128922785",
+        "name": "Pod Mesoglea"
+    },
+    "s9_tissuesample_shell": {
+        "category": "Salvage",
+        "id": "128922781",
+        "name": "Pod Tissue"
+    },
+    "s_tissuesample_cells": {
+        "category": "Salvage",
+        "id": "128922520",
+        "name": "Pod Core Tissue"
+    },
+    "s_tissuesample_core": {
+        "category": "Salvage",
+        "id": "128922522",
+        "name": "Pod Surface Tissue"
+    },
+    "s_tissuesample_surface": {
+        "category": "Salvage",
+        "id": "128922521",
+        "name": "Pod Dead Tissue"
+    },
     "samarium": {
         "category": "Metals",
         "id": "128673847",
@@ -1423,11 +1498,6 @@
         "category": "Consumer Items",
         "id": "128682048",
         "name": "Survival Equipment"
-    },
-    "symbol": {
-        "category": "category",
-        "id": "id",
-        "name": "name"
     },
     "syntheticfabrics": {
         "category": "Textiles",
@@ -1593,6 +1663,11 @@
         "category": "Consumer Items",
         "id": "128671444",
         "name": "Trinkets of Hidden Fortune"
+    },
+    "tritium": {
+        "category": "Chemicals",
+        "id": "128961249",
+        "name": "Tritium"
     },
     "unknownartifact": {
         "category": "Salvage",

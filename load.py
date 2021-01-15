@@ -13,7 +13,7 @@ this.cargoDict = {}
 this.eddbData = {}
 this.inventory = []
 this.cargoCapacity = "?"
-this.version = 'v2.0.0'
+this.version = 'v2.0.1'
 
 def checkVersion():
 	req = requests.get(url='https://api.github.com/repos/RemainNA/cargo-manifest/releases/latest')
@@ -64,7 +64,13 @@ def prefs_changed(cmdr, is_beta):
 
 def refreshPrices(refreshDisplay = True):
 	# Pulls prices from EDDB
-	this.eddbData = requests.get(url='https://eddb.io/archive/v6/commodities.json').json()
+	this.eddbData = {}
+	req = requests.get(url='https://eddb.io/archive/v6/commodities.json')
+	if not req.status_code == requests.codes.ok:
+		return -1 
+	data = req.json()
+	for i in data:
+		this.eddbData[i['name']] = i['average_price']
 	if refreshDisplay:
 		update_display()
 
@@ -127,21 +133,30 @@ def update_display():
 		if 'MissionID' in i:
 			line = line+" (Mission)"
 		if config.getint("cm_showPrices"):
-			for j in this.eddbData:
-				if int(j['ed_id']) == int(this.items[i['Name']]['id']):
-					line = line+" ({:,} cr avg)".format(j['average_price'])
-					break
+			# Look up price
+			avgPrice = None
+			if i['Name'] in this.items and this.items[i['Name']]['name'] in this.eddbData:
+				avgPrice = this.eddbData[this.items[i['Name']]['name']]
+			elif 'Name_Localised' in i and i['Name_Localised'] in this.eddbData:
+				avgPrice = this.eddbData[i['Name_Localised']]
+			# Display price
+			if avgPrice != None:
+				line = line+" ({:,} cr avg)".format(avgPrice)
+			else:
+				line = line+" (? cr avg)"
+		
 		manifest = manifest+"\n"+line
 		currentCargo += int(i['Count'])
 
 	if this.inventory == []:
 		for i in this.cargoDict:
-			manifest = manifest+"\n{quant} {name}".format(name=this.items[i]['name'], quant=this.cargoDict[i])
-			if config.getint("cm_showPrices"):
-				for j in this.eddbData:
-					if j['name'] == this.items[i]['name']:
-						manifest = manifest+" ({:,} cr avg)".format(j['average_price'])
-						break
+			manifest = manifest+"\n{quant} {name}".format(name=(this.items[i]['name'] if i in this.items else i), quant=this.cargoDict[i])
+			if config.getint("cm_showPrices") and i in this.items and this.items[i]["name"] in this.eddbData:
+				avgPrice = this.eddbData[this.items[i]["name"]]
+				if avgPrice != None:
+					manifest = manifest+" ({:,} cr avg)".format(avgPrice)
+				else:
+					manifest = manifest+" (? cr avg)"
 			currentCargo += int(this.cargoDict[i])
 	
 	this.title["text"] = "Cargo Manifest ({curr}/{cap})".format(curr = currentCargo, cap = this.cargoCapacity)
