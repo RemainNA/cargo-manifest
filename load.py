@@ -13,7 +13,7 @@ this.cargoDict = {}
 this.eddbData = {}
 this.inventory = []
 this.cargoCapacity = "?"
-this.version = 'v2.0.1'
+this.version = 'v2.1.0'
 
 def checkVersion():
 	req = requests.get(url='https://api.github.com/repos/RemainNA/cargo-manifest/releases/latest')
@@ -30,7 +30,7 @@ def plugin_start3(plugin_dir):
 	pluginPath = path.join(config.plugin_dir, directoryName)
 	filePath = path.join(pluginPath, "items.json")
 	this.items = json.loads(open(filePath, 'r').read())
-	if config.getint("cm_showPrices"):
+	if config.get_bool("cm_showPrices"):
 		refreshPrices(False)
 	this.newest = checkVersion()
 	return "Cargo Manifest"
@@ -49,7 +49,7 @@ def plugin_app(parent):
 def plugin_prefs(parent, cmdr, is_beta):
 	# Adds page to settings menu
 	frame = nb.Frame(parent)
-	this.showPrices = tk.IntVar(value=config.getint("cm_showPrices") and 1)
+	this.showPrices = tk.BooleanVar(value=config.get_bool("cm_showPrices"))
 	HyperlinkLabel(frame, text="Cargo Manifest {}".format(this.version), background=nb.Label().cget('background'), url="https://github.com/RemainNA/cargo-manifest").grid()
 	nb.Checkbutton(frame, text="Show commodity prices from EDDB", variable=this.showPrices).grid()
 	nb.Button(frame, text="Refresh prices", command=refreshPrices).grid()
@@ -58,7 +58,7 @@ def plugin_prefs(parent, cmdr, is_beta):
 def prefs_changed(cmdr, is_beta):
 	# Saves settings
 	config.set("cm_showPrices", this.showPrices.get())
-	if config.getint("cm_showPrices"):
+	if config.get_bool("cm_showPrices"):
 		refreshPrices(False)
 	update_display()
 
@@ -132,7 +132,7 @@ def update_display():
 			line = line+", {} stolen".format(i['Stolen'])
 		if 'MissionID' in i:
 			line = line+" (Mission)"
-		if config.getint("cm_showPrices"):
+		if config.get_bool("cm_showPrices"):
 			# Look up price
 			avgPrice = None
 			if i['Name'] in this.items and this.items[i['Name']]['name'] in this.eddbData:
@@ -151,7 +151,7 @@ def update_display():
 	if this.inventory == []:
 		for i in this.cargoDict:
 			manifest = manifest+"\n{quant} {name}".format(name=(this.items[i]['name'] if i in this.items else i), quant=this.cargoDict[i])
-			if config.getint("cm_showPrices") and i in this.items and this.items[i]["name"] in this.eddbData:
+			if config.get_bool("cm_showPrices") and i in this.items and this.items[i]["name"] in this.eddbData:
 				avgPrice = this.eddbData[this.items[i]["name"]]
 				if avgPrice != None:
 					manifest = manifest+" ({:,} cr avg)".format(avgPrice)
