@@ -13,7 +13,7 @@ this.cargoDict = {}
 this.eddbData = {}
 this.inventory = []
 this.cargoCapacity = "?"
-this.version = 'v2.1.0'
+this.version = 'v2.1.1'
 
 def checkVersion():
 	req = requests.get(url='https://api.github.com/repos/RemainNA/cargo-manifest/releases/latest')
