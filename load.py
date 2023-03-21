@@ -29,7 +29,14 @@ def plugin_start3(plugin_dir):
 	directoryName = path.basename(path.dirname(__file__)) or 'CargoManifest'
 	pluginPath = path.join(config.plugin_dir, directoryName)
 	filePath = path.join(pluginPath, "items.json")
-	this.items = json.loads(open(filePath, 'r').read())
+	this.items = pullItems()
+	if this.items == -1:
+		# If error reaching EDCD github, use local copy
+		this.items = json.loads(open(filePath, 'r').read())
+	else:
+		# If successful, save local copy
+		with open(filePath, 'w') as f:
+			f.write(json.dumps(this.items))
 	if config.get_bool("cm_showPrices"):
 		refreshPrices(False)
 	this.newest = checkVersion()
@@ -73,6 +80,29 @@ def refreshPrices(refreshDisplay = True):
 		this.eddbData[i['name']] = i['average_price']
 	if refreshDisplay:
 		update_display()
+
+def pullItems():
+	items = {}
+
+	# Fetch commodity data from EDCD github
+	commodities = requests.get('https://raw.githubusercontent.com/EDCD/FDevIDs/master/commodity.csv')
+	rareCommodities = requests.get('https://raw.githubusercontent.com/EDCD/FDevIDs/master/rare_commodity.csv')
+
+	if not commodities.status_code == requests.codes.ok or not rareCommodities.status_code == requests.codes.ok:
+		return -1 # Error
+
+	for c in commodities.text.split('\n'):
+		line = c.strip().split(',')
+		if line[0] == 'id' or c == '':
+			continue
+		items[line[1].lower()] = {'id':line[0], 'category':line[2], 'name':line[3]}
+
+	for c in rareCommodities.text.split('\n'):
+		line = c.strip().split(',')
+		if line[0] == 'id' or c == '':
+			continue
+		items[line[1].lower()] = {'id':line[0], 'category':line[3], 'name':line[4]}
+	return items
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
 	# Parse journal entries	
