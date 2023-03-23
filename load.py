@@ -46,7 +46,7 @@ def plugin_app(parent):
 	# Adds to the main page UI
 	this.frame = tk.Frame(parent)
 	this.title = tk.Label(this.frame, text="Cargo Manifest")
-	this.updateIndicator = HyperlinkLabel(this.frame, text="Update availabe", anchor=tk.W, url='https://github.com/RemainNA/cargo-manifest/releases')
+	this.updateIndicator = HyperlinkLabel(this.frame, text="Update available", anchor=tk.W, url='https://github.com/RemainNA/cargo-manifest/releases')
 	this.manifest = tk.Label(this.frame)
 	this.title.grid(row = 0, column = 0)
 	if this.newest == 0:
