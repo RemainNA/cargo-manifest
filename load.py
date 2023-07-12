@@ -16,7 +16,10 @@ this.cargoCapacity = "?"
 this.version = 'v2.2.0'
 
 def checkVersion():
-	req = requests.get(url='https://api.github.com/repos/RemainNA/cargo-manifest/releases/latest')
+	try:
+		req = requests.get(url='https://api.github.com/repos/RemainNA/cargo-manifest/releases/latest')
+	except:
+		return -1
 	if not req.status_code == requests.codes.ok:
 		return -1 # Error
 	data = req.json()
@@ -65,8 +68,11 @@ def pullItems():
 	items = {}
 
 	# Fetch commodity data from EDCD github
-	commodities = requests.get('https://raw.githubusercontent.com/EDCD/FDevIDs/master/commodity.csv')
-	rareCommodities = requests.get('https://raw.githubusercontent.com/EDCD/FDevIDs/master/rare_commodity.csv')
+	try:
+		commodities = requests.get('https://raw.githubusercontent.com/EDCD/FDevIDs/master/commodity.csv')
+		rareCommodities = requests.get('https://raw.githubusercontent.com/EDCD/FDevIDs/master/rare_commodity.csv')
+	except:
+		return -1
 
 	if not commodities.status_code == requests.codes.ok or not rareCommodities.status_code == requests.codes.ok:
 		return -1 # Error
