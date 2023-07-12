@@ -37,8 +37,6 @@ def plugin_start3(plugin_dir):
 		# If successful, save local copy
 		with open(filePath, 'w') as f:
 			f.write(json.dumps(this.items))
-	if config.get_bool("cm_showPrices") or config.get_bool("cm_showMaxSell"):
-		refreshPrices(False)
 	this.newest = checkVersion()
 	return "Cargo Manifest"
 
@@ -56,36 +54,12 @@ def plugin_app(parent):
 def plugin_prefs(parent, cmdr, is_beta):
 	# Adds page to settings menu
 	frame = nb.Frame(parent)
-	this.showPrices = tk.BooleanVar(value=config.get_bool("cm_showPrices"))
-	this.showMaxSell = tk.BooleanVar(value=config.get_bool("cm_showMaxSell"))
 	HyperlinkLabel(frame, text="Cargo Manifest {}".format(this.version), background=nb.Label().cget('background'), url="https://github.com/RemainNA/cargo-manifest").grid()
-	nb.Checkbutton(frame, text="Show commodity average price", variable=this.showPrices).grid()
-	nb.Checkbutton(frame, text="Show commodity max sell price", variable=this.showMaxSell).grid()
-	nb.Button(frame, text="Refresh prices from EDDB", command=refreshPrices).grid()
 	return frame
 
 def prefs_changed(cmdr, is_beta):
 	# Saves settings
-	config.set("cm_showPrices", this.showPrices.get())
-	config.set("cm_showMaxSell", this.showMaxSell.get())
-	if config.get_bool("cm_showPrices") or config.get_bool("cm_showMaxSell"):
-		refreshPrices(False)
 	update_display()
-
-def refreshPrices(refreshDisplay = True):
-	# Pulls prices from EDDB
-	this.eddbData = {}
-	req = requests.get(url='https://eddb.io/archive/v6/commodities.json')
-	if not req.status_code == requests.codes.ok:
-		return -1 
-	data = req.json()
-	for i in data:
-		this.eddbData[i['name']] = {
-			'average': i['average_price'],
-			'max': i['max_sell_price']
-		}
-	if refreshDisplay:
-		update_display()
 
 def pullItems():
 	items = {}
@@ -169,27 +143,6 @@ def update_display():
 			line = line+", {} stolen".format(i['Stolen'])
 		if 'MissionID' in i:
 			line = line+" (Mission)"
-		if config.get_bool("cm_showPrices") or config.get_bool("cm_showMaxSell"):
-			# Look up price
-			avgPrice = None
-			maxPrice = None
-			if i['Name'] in this.items and this.items[i['Name']]['name'] in this.eddbData:
-				avgPrice = this.eddbData[this.items[i['Name']]['name']]['average']
-				maxPrice = this.eddbData[this.items[i['Name']]['name']]['max']
-			elif 'Name_Localised' in i and i['Name_Localised'] in this.eddbData:
-				avgPrice = this.eddbData[i['Name_Localised']]['average']
-				maxPrice = this.eddbData[i['Name_Localised']]['max']
-			if config.get_bool("cm_showPrices") and config.get_bool("cm_showMaxSell"):
-				# Display both
-				line = line+" ({:,} cr avg, {:,} cr max)".format(avgPrice if avgPrice != None else '?', maxPrice if maxPrice != None else '?')
-				cumulativeMaxSell += int(i['Count']) * (maxPrice if maxPrice != None else 0)
-			elif config.get_bool("cm_showPrices"):
-				# Display avg price
-				line = line+" ({:,} cr avg)".format(avgPrice if avgPrice != None else '?')
-			elif config.get_bool("cm_showMaxSell"):
-				# Display max sell price
-				line = line+" ({:,} cr max)".format(maxPrice if maxPrice != None else '?')
-				cumulativeMaxSell += int(i['Count']) * (maxPrice if maxPrice != None else 0)
 
 		manifest = manifest+"\n"+line
 		currentCargo += int(i['Count'])
@@ -197,20 +150,6 @@ def update_display():
 	if this.inventory == []:
 		for i in this.cargoDict:
 			manifest = manifest+"\n{quant} {name}".format(name=(this.items[i]['name'] if i in this.items else i), quant=this.cargoDict[i])
-			if (config.get_bool("cm_showPrices") or config.get_bool("cm_showMaxSell")) and i in this.items and this.items[i]["name"] in this.eddbData:
-				avgPrice = this.eddbData[this.items[i]["name"]]['average']
-				maxPrice = this.eddbData[this.items[i]["name"]]['max']
-				if config.get_bool("cm_showPrices") and config.get_bool("cm_showMaxSell"):
-					# Display both
-					line = line+" ({:,} cr avg, {:,} cr max)".format(avgPrice if avgPrice != None else '?', maxPrice if maxPrice != None else '?')
-					cumulativeMaxSell += int(this.cargoDict[i]) * (maxPrice if maxPrice != None else 0)
-				elif config.get_bool("cm_showPrices"):
-					# Display avg price
-					line = line+" ({:,} cr avg)".format(avgPrice if avgPrice != None else '?')
-				elif config.get_bool("cm_showMaxSell"):
-					# Display max sell price
-					line = line+" ({:,} cr max)".format(maxPrice if maxPrice != None else '?')
-					cumulativeMaxSell += int(this.cargoDict[i]) * (maxPrice if maxPrice != None else 0)
 			currentCargo += int(this.cargoDict[i])
 
 	if config.get_bool("cm_showMaxSell") and cumulativeMaxSell > 0:
