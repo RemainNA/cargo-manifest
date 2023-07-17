@@ -13,7 +13,7 @@ this.cargoDict = {}
 this.eddbData = {}
 this.inventory = []
 this.cargoCapacity = "?"
-this.version = 'v2.2.0'
+this.version = 'v3.0.0'
 
 def checkVersion():
 	try:
