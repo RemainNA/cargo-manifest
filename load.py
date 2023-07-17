@@ -39,7 +39,7 @@ def plugin_start3(plugin_dir):
 	else:
 		# If successful, save local copy
 		with open(filePath, 'w') as f:
-			f.write(json.dumps(this.items))
+			f.write(json.dumps(this.items, indent=4, sort_keys=True))
 	this.newest = checkVersion()
 	return "Cargo Manifest"
 
