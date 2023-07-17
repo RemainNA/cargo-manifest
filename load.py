@@ -50,18 +50,25 @@ def plugin_app(parent):
 	this.updateIndicator = HyperlinkLabel(this.frame, text="Update available", anchor=tk.W, url='https://github.com/RemainNA/cargo-manifest/releases')
 	this.manifest = tk.Label(this.frame)
 	this.title.grid(row = 0, column = 0)
-	if this.newest == 0:
+	if this.newest == 0 and not config.get_bool("cm_hideUpdate"):
 		this.updateIndicator.grid(padx = 5, row = 0, column = 1)
 	return this.frame
 
 def plugin_prefs(parent, cmdr, is_beta):
 	# Adds page to settings menu
 	frame = nb.Frame(parent)
+	this.hideUpdate = tk.BooleanVar(value=config.get_bool("cm_hideUpdate"))
 	HyperlinkLabel(frame, text="Cargo Manifest {}".format(this.version), background=nb.Label().cget('background'), url="https://github.com/RemainNA/cargo-manifest").grid()
+	tk.Checkbutton(frame, text="Hide update available indicator (not recommended)", variable=this.hideUpdate, background=nb.Label().cget('background')).grid()
 	return frame
 
 def prefs_changed(cmdr, is_beta):
 	# Saves settings
+	config.set("cm_hideUpdate", this.hideUpdate.get())
+	if this.newest == 0 and not config.get_bool("cm_hideUpdate"):
+		this.updateIndicator.grid(padx = 5, row = 0, column = 1)
+	else:
+		this.updateIndicator.grid_forget()
 	update_display()
 
 def pullItems():
